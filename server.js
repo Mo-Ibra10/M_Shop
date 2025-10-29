@@ -14,6 +14,7 @@ const globalError = require('./middlewares/errorMiddleware')
 const dbConnection = require('./config/database');
 // routes
 const mountRoutes = require('./routes');
+const { webhookCheckout } = require('./services/orderService');
 //const categoryRoute = require('./routes/categoryRoute');
 //const subCategoryRoute = require('./routes/subCategoryRoute');
 //const brandRoute = require('./routes/brandRoute');
@@ -36,6 +37,9 @@ app.use(cors());
 app.options(/.*/, cors()); // ✅ يقبل أي مسار
 //compress all responses
 app.use(compression());
+
+//checkout webhook
+app.post('/webhook-checkout',express.raw({type:'application/json'}),webhookCheckout);
 
 
 // Middlewares
