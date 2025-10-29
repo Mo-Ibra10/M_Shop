@@ -7,7 +7,7 @@ const Product = require('../models/productModel');
 const ApiError = require('../utils/apiError');
 
 const Order = require('../models/orderModel');
-
+const User = require('../models/userModel');
 //description  create cash order
 //route        POST  /api/v1/orders/cartId
 //access       private/user
@@ -167,6 +167,41 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
   });
 });
 
+const createOrderCheckout = async (session) => {
+    const cartId = session.client_reference_id;
+    const shippingAddress = session.metadata;
+    const orderPrice = session.display_items[0].amount / 100;
+
+    const card = await Cart.findById(cartId);
+    const user = await User.findOne({ email: session.customer_email });
+
+    // create order
+    const order = await Order.create({
+        user: user._id,
+        cartItems: card.cartItems,
+        shippingAddress,
+        totalOrderPrice: orderPrice,
+        isPaid: true,
+        paidAt: Date.now(),
+        paymentMethodType: 'card',
+    });
+    // after creating order, decrement product quantity, increment sold product
+        if (order) {
+    const bulkOption = Cart.cartItems.map((item) => ({
+        updateOne: {
+            filter: { _id: item.product },
+            update: { $inc: { quantity: -item.quantity, sold: +item.quantity } },
+        },
+    }));
+    await Product.bulkWrite(bulkOption , {});
+    //5- clear cart depend on cartId
+    await Cart.findByIdAndDelete(cartId);
+    }
+}
+//description  this webhook well run where stripe  payment success paid
+//route        post  /webhook-checkout
+//access       protected/user
+
 exports.webhookCheckout = asyncHandler(async (req, res, next) => {
     const sig = req.headers['stripe-signature'];
 
@@ -181,7 +216,8 @@ exports.webhookCheckout = asyncHandler(async (req, res, next) => {
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
     if (event.type === 'checkout.session.completed') {
-        console.log('create order here ....');
-        console.log(event.data.object.client_reference_id);
-      }
+      //create order
+      createOrderCheckout(event.data.object);
+    }
+    res.status(200).json({ received: true });
 });
