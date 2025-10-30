@@ -83,15 +83,21 @@ app.use((req, res, next) => {
 app.use(globalError);
 
 const PORT = process.env.PORT || 8000;
-const server =app.listen(PORT, () => {
-    console.log(`App running on port ${PORT}`);
+
+// ✅ تأكد إنك حاطط ده قبل listen
+app.get("/", (req, res) => {
+  res.send("Server is running ✅");
 });
 
-// Events => list => callback(err) //handle errors or rejections outside express (unhandled rejection)
-process.on("unhandledRejection",(err)=>{
-        console.error(`Unhandled Rejection Error : ${err.name} | ${err.message}`);
-        server.close(()=>{
-            console.error(`shutting down....`);
-            process.exit(1);
-        });
+const server = app.listen(PORT, () => {
+  console.log(`App running on port ${PORT}`);
+});
+
+// ✅ handle unhandled rejections (زي ما عندك)
+process.on("unhandledRejection", (err) => {
+  console.error(`Unhandled Rejection Error : ${err.name} | ${err.message}`);
+  server.close(() => {
+    console.error(`Shutting down....`);
+    process.exit(1);
+  });
 });
