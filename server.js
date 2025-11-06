@@ -6,6 +6,8 @@ const morgan = require('morgan');
 const cors = require('cors');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const compression = require('compression');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const rateLimit = require('express-rate-limit');
 
 dotenv.config({ path: 'config.env' });
 
@@ -52,6 +54,14 @@ if (process.env.NODE_ENV === 'development') {
     app.use(morgan("dev"));
     console.log(`node : ${process.env.NODE_ENV}`);
 }
+
+// Limit each IP to max 100 requests per window (here, per 15 minutes)
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 1 hours'
+});
+app.use( "/api",limiter); //  apply to all requests that begin with /api
 
 // Routes
 mountRoutes(app);
