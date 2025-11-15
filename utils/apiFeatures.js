@@ -44,14 +44,22 @@ class ApiFeatures {
   }
 
   sort() {
-    if (this.queryString.sort) {
-      const sortBy = this.queryString.sort.split(',').join(' ');
-      this.mongooseQuery = this.mongooseQuery.sort(sortBy);
-    } else {
-      this.mongooseQuery = this.mongooseQuery.sort('-createdAt');
+  if (this.queryString.sort) {
+    let sortBy = this.queryString.sort;
+
+    if (Array.isArray(sortBy)) {
+      sortBy = sortBy.join(',');
     }
-    return this;
+
+    const finalSort = sortBy.split(',').join(' ');
+
+    this.mongooseQuery = this.mongooseQuery.sort(finalSort);
+  } else {
+    this.mongooseQuery = this.mongooseQuery.sort('-createdAt');
   }
+
+  return this;
+}
 
   limitFields() {
     if (this.queryString.fields) {

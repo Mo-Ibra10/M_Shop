@@ -9,6 +9,9 @@ const compression = require('compression');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const rateLimit = require('express-rate-limit');
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+const hpp = require('hpp');
+
 dotenv.config({ path: 'config.env' });
 
 const ApiError = require('./utils/apiError');
@@ -62,6 +65,15 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again after 1 hours'
 });
 app.use( "/api",limiter); //  apply to all requests that begin with /api
+
+// Prevent http param pollution
+app.use(hpp({whitelist:[
+    'price',
+    'ratingsAverage',
+    'ratingsQuantity',
+    'sold',
+    "quantity"
+]}));
 
 // Routes
 mountRoutes(app);
