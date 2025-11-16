@@ -12,8 +12,7 @@ const rateLimit = require('express-rate-limit');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const hpp = require('hpp');
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-const mongoSanitize = require('express-mongo-sanitize');
+// eslint-disable-next-line import/no-unresolved
 
 dotenv.config({ path: 'config.env' });
 
@@ -62,7 +61,23 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 //to prevent NoSQL injection attacks,and apply data sanitization against NoSQL query injection
-app.use(mongoSanitize());
+app.use((req, res, next) => {
+  const sanitize = obj => {
+    // eslint-disable-next-line no-restricted-syntax, guard-for-in
+    for (const key in obj) {
+      if (key.startsWith('$') || key.includes('.')) {
+        delete obj[key];
+      }
+      if (typeof obj[key] === "object") sanitize(obj[key]);
+    }
+  };
+
+  sanitize(req.body);
+  sanitize(req.query);
+  sanitize(req.params);
+
+  next();
+});
 
 // Limit each IP to max 100 requests per window (here, per 15 minutes)
 const limiter = rateLimit({

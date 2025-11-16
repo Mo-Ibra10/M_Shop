@@ -10,6 +10,7 @@ const ApiError = require('../utils/apiError');
 const sendEmail = require('../utils/sendEmail');
 const User = require('../models/userModel');
 const createToken = require('../utils/createToken');
+const { sanitizeUser } = require('../utils/sanitizeData');
 
 
 //description  Signup
@@ -28,7 +29,7 @@ exports.signup = asyncHandler(async (req, res) => {
 
 
     //3-send response
-    res.status(201).json({data: user, token: token});
+    res.status(201).json({data: sanitizeUser(user), token: token});
 });
 
 //description  login
