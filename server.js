@@ -12,6 +12,9 @@ const rateLimit = require('express-rate-limit');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const hpp = require('hpp');
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+const mongoSanitize = require('express-mongo-sanitize');
+
 dotenv.config({ path: 'config.env' });
 
 const ApiError = require('./utils/apiError');
@@ -57,6 +60,9 @@ if (process.env.NODE_ENV === 'development') {
     app.use(morgan("dev"));
     console.log(`node : ${process.env.NODE_ENV}`);
 }
+
+//to prevent NoSQL injection attacks,and apply data sanitization against NoSQL query injection
+app.use(mongoSanitize());
 
 // Limit each IP to max 100 requests per window (here, per 15 minutes)
 const limiter = rateLimit({
